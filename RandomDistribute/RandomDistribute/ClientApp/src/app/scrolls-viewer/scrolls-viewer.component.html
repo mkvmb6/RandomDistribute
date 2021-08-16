@@ -1,0 +1,55 @@
+<p>{{urlStatus}}</p>
+<div class="container">
+  <div *ngIf="userName!=''" style="width: fit-content">
+    <span>Players: {{getPlayerNames()}}</span>
+    <div *ngIf="roomInfo.roomOwner==userName">
+      Chits:
+      <form #fc="ngForm" (ngSubmit)="distributeChits()" novalidate>
+        <input type="text"
+               placeholder="Enter chit titles separated by comma"
+               name="chitsInput"
+               required
+               class="form-control"
+               [(ngModel)]="chits"
+               #chitsInput="ngModel"/>
+        <div class="alert alert-danger" *ngIf="chitsInput.touched && !chitsInput.valid">
+          Please enter valid chit titles.
+        </div>
+
+        <br/>
+        <button class="btn btn-primary" [disabled]="!fc.valid">Distribute</button>
+      </form>
+    </div>
+    <br/>
+
+    <div *ngIf="roomInfo.users[userName]!=''">
+      <div class="scroll" (click)="toggleScroll()">
+        <img class="img-fluid" src="ChitScrollAnim/ChitScrollAnimation{{scrollImageCount}}.png" alt="scroll image not found"/>
+        <span *ngIf="showScrollText" class="scrollText">{{roomInfo.users[userName]}}</span>
+      </div>
+      <span style="margin-left: 45%; font-size: larger">{{userName}}</span>
+      <br />
+      <button class="btn btn-primary" (click)="refreshChit()">Refresh</button>
+    </div>
+
+  </div>
+
+  <div *ngIf="userName==''">
+    Name:
+    <form #f="ngForm" (ngSubmit)="createUser()" novalidate>
+      <input type="text"
+             placeholder="Enter your name"
+             name="roomUserInput"
+             required
+             class="form-control"
+             [(ngModel)]="roomUser"
+             #roomUserInput="ngModel"/>
+      <div class="alert alert-danger" *ngIf="roomUserInput.touched && !roomUserInput.valid">
+        Please enter a valid name.
+      </div>
+
+      <br/>
+      <button class="btn btn-primary" [disabled]="!f.valid">Join Room</button>
+    </form>
+  </div>
+</div>

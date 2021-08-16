@@ -1,6 +1,10 @@
+using System;
+using System.Threading.Tasks;
+
+using Firebase.Database;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,12 +24,47 @@ namespace RandomDistribute
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            AddRangeService(services);
+            AddRateLimitService(services);
+            AddFirebaseClient(services);
             services.AddControllersWithViews();
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+        }
+
+        private void AddFirebaseClient(IServiceCollection services)
+        {
+            var baseUrl = Configuration["FirebaseConfig:Url"];
+            var firebaseClient = new FirebaseClient(
+                baseUrl,
+                new FirebaseOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(Configuration["FirebaseConfig:AuthKey"])
+                });
+            services.AddSingleton(firebaseClient);
+        }
+
+        private void AddRangeService(IServiceCollection services)
+        {
+            var rangeSize = Convert.ToInt64(Configuration["RangeSize"]);
+            var connectionString = Configuration.GetConnectionString("Default");
+            IRangeService rangeService = new RangeService(rangeSize, connectionString);
+            services.AddSingleton(rangeService);
+        }
+
+        private void AddRateLimitService(IServiceCollection services)
+        {
+            var perMinuteRequestLimit = Convert.ToInt32(Configuration["RequestLimits:PerMinuteLimit"]);
+            var perHourRequestLimit = Convert.ToInt32(Configuration["RequestLimits:PerHourLimit"]);
+            var perDayCustomUrlRequestLimit = Convert.ToInt32(Configuration["RequestLimits:PerDayCustomUrlLimit"]);
+            IRateLimitService rateLimitService = new RateLimitService(
+                perMinuteRequestLimit,
+                perHourRequestLimit,
+                perDayCustomUrlRequestLimit);
+            services.AddSingleton(rateLimitService);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
